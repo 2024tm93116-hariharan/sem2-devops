@@ -1,17 +1,17 @@
 pipeline {
-    agent any
-    
+    agent any 
+
     stages {
         stage('Checkout') {
             steps {
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']],
+                    branches: [[name: "*/${env.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/2024tm93116-hariharan/sem2-devops.git'
                     ]]
                 ])
-                echo "Checked out branch: main"
+                echo "Checked out branch: ${env.BRANCH_NAME}"
             }
         }
         
@@ -26,6 +26,7 @@ pipeline {
                 echo "Running tests..."
             }
         }
+        
         stage('Deploy') {
             steps {
                 script {
@@ -44,6 +45,7 @@ pipeline {
             }
         }
     }
+    
     post {
         success {
             echo "Pipeline executed successfully."
