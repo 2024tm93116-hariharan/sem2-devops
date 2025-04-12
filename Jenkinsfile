@@ -1,44 +1,57 @@
 pipeline {
-    agent any  // Uses any available agent
-
+    agent any
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                echo "Building the project..."
-                // For example, compile your code, or run a build tool such as Maven/Gradle:
-                // bat 'mvn clean package'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/2024tm93116-hariharan/sem2-devops.git'
+                    ]]
+                ])
+                echo "Checked out branch: main"
             }
         }
+        
+        stage('Build') {
+            steps {
+                echo "Building the application..."
+            }
+        }
+        
         stage('Test') {
             steps {
                 echo "Running tests..."
-                // Run tests here. For example:
-                // bat 'mvn test'
             }
         }
-        stage('Deploy to Staging') {
+        stage('Deploy') {
             steps {
-                echo "Deploying to Staging Environment..."
-                // Commands for deployment to a staging server (e.g., copying files, restarting services, or triggering Docker deployment)
-                // bat 'deploy_staging.bat'
-            }
-        }
-        stage('Deploy to Production') {
-            steps {
-                echo "Deploying to Production Environment..."
-                // Commands for production deployment. This can include additional approvals:
-                // input message: "Approve Production Deployment?", ok: "Deploy"
-                // bat 'deploy_production.bat'
+                script {
+                    if ("${env.BRANCH_NAME}" == "stg") {
+                        echo "Deploying to Staging Environment..."
+                        sh 'docker rm -f staging || true'
+                        sh 'docker run -d --name staging -p 8081:80 myapp:staging'
+                    } else if ("${env.BRANCH_NAME}" == "main") {
+                        echo "Deploying to Production Environment..."
+                        sh 'docker rm -f production || true'
+                        sh 'docker run -d --name production -p 8080:80 myapp:prod'
+                    } else {
+                        echo "Non-deployment branch. Skipping deployment stage."
+                    }
+                }
             }
         }
     }
     post {
         success {
-            echo "Pipeline completed successfully."
+            echo "Pipeline executed successfully."
         }
         failure {
-            echo "Pipeline encountered an error. Investigate the issue."
-            // Optionally: Add notifications (e.g., email, Slack)
+            echo "Pipeline failed. Please check the logs for errors."
         }
     }
 }
