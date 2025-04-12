@@ -1,8 +1,6 @@
 pipeline {
     agent any
-    environment {
-        // Define any environment variables if required
-    }
+    
     triggers {
         pollSCM('H/5 * * * *')
     }
