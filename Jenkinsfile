@@ -36,7 +36,7 @@ pipeline {
                     } else if ("${env.BRANCH_NAME}" == "main") {
                         echo "Deploying to Production Environment..."
                         sh 'docker rm -f production || true'
-                        sh 'docker run -d --name production -p 8080:80 myapp:prod'
+                        sh 'docker run -d --name production -p 8082:80 myapp:prod'
                     } else {
                         echo "Non-deployment branch. Skipping deployment stage."
                     }
